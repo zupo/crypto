@@ -55,12 +55,37 @@ def find_spaces(ct, xored_cts):
             # except IndexError:
             #     pass  # cypher text is longer than key, just skip
 
-# encryption key
-#key = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-key = [0, 0, 0]
-
 # target cypher text
 tct = "32510ba9babebbbefd001547a810e67149caee11d945cd7fc81a05e9f85aac650e9052ba6a8cd8257bf14d13e6f0a803b54fde9e77472dbff89d71b57bddef121336cb85ccb8f3315f4b52e301d16e9f52f904"
+
+# placeholder for encryption key
+# each char takes one byte, or 2 hex numbers
+# so we need our key to be as long as 2-number pairs in tct
+key = [0 for i in range(len(tct) / 2)]
+
+
+def analyze(cts):
+    import itertools
+    permutations = list(itertools.permutations(range(len(cts)), 2))
+
+    for pindex, perm in enumerate(permutations):
+
+        # compare two cypthertexts, choose IDs of cypthertexts from the list
+        # of permutations
+        xor = strxor(cts[perm[0]], cts[perm[1]])
+
+        # look for uppercase characters in the xor
+        for cindex, char in enumerate(xor):
+            if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                # print 'found uppercase char (%s) at index %i when comparing ct%i and ct%i' % (char, cindex, perm[0], perm[1])
+                # print 'comparing index %i with other cypthertexts' % cindex
+                for i in range(len(cts)):
+                    if i in perm:  # skip ct IDs that we are already processing
+                        continue
+
+                    if strxor(cts[perm[0]], cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                        #print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
+                        key[cindex] = strxor(cts[perm[0]][cindex], ' ')
 
 
 def encrypt_my_plaintexts():
@@ -88,28 +113,14 @@ def main():
     assert my_cts[2] == '\xa1\xfa\xa2'
     assert my_cts[3] == '\xa2\xf7\xe4'
 
-    import itertools
-    permutations = list(itertools.permutations(range(len(my_cts)), 2))
+    analyze(my_cts)
 
-    for pindex, perm in enumerate(permutations):
+    # key placeholder is longer, we are only iterested in the first three bytes
+    # as my_cts only have three bytes
+    print key[:3]
+    assert key[:3] == [0, '\x9f', '\xc4']
 
-        # compare two cypthertexts, choose IDs of cypthertexts from the list
-        # of permutations
-        xor = strxor(my_cts[perm[0]], my_cts[perm[1]])
 
-        # look for uppercase characters in the xor
-        for cindex, char in enumerate(xor):
-            if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-                # print 'found uppercase char (%s) at index %i when comparing ct%i and ct%i' % (char, cindex, perm[0], perm[1])
-                # print 'comparing index %i with other cypthertexts' % cindex
-                # import pdb; pdb.set_trace( )
-                for i in range(len(my_cts)):
-                    if i in perm:  # skip ct IDs that we are already processing
-                        continue
-
-                    if strxor(my_cts[perm[0]], my_cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-                        print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
-                        key[cindex] = strxor(my_cts[perm[0]][cindex], ' ')
 
                 #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
     #             print 'bingo! my_cts[0] has a space at index %s' % index
@@ -138,8 +149,6 @@ def main():
     #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
     #         print char
 
-    print key
-    assert key == [0, '\x9f', '\xc4']
 
     # import itertools
     # for ct1, ct2 in itertools.permutations(cts, 2):
