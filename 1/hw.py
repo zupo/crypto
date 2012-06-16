@@ -69,6 +69,10 @@ def analyze(cts):
 
         # look for uppercase characters in the xor
         for cindex, char in enumerate(xor):
+
+            if cindex >= len(key):
+                continue  # we are not interested in key positions that are longer than our target cyphertext
+
             if key[cindex] != 0:
                 continue  # we already have a key on this index
 
@@ -79,9 +83,13 @@ def analyze(cts):
                     if i in perm:  # skip ct IDs that we are already processing
                         continue
                     try:
+                        if strxor(cts[perm[0]], cts[i])[cindex] == char:
+                            continue  # we've encountered another space, and got the same char back, continue
+
                         if strxor(cts[perm[0]], cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-                            #print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
-                            # if cindex == 2:
+                            # print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
+                            # if cindex == 1:
+                            #     print 'bingo! cts[%i] has a space at index %i' % (perm[0], cindex)
                             #     import pdb; pdb.set_trace( )
                             key[cindex] = strxor(cts[perm[0]][cindex], ' ')
                     except IndexError:
@@ -104,9 +112,9 @@ def decrypt(ct, key):
 
 my_pts = [
     'abc',
-    'a b',
-    'def',
-    'gh ',
+    'a b',  # 1
+    'def',  # 2
+    'g  ',
 ]
 
 # "".join([random.choice(string.ascii_letters) for i in range(40)])
@@ -133,7 +141,7 @@ def main():
     assert my_cts[0] == 'a4fda7'  # a is xored into 'a4'
     assert my_cts[1] == 'a4bfa6'  # a is xored into 'a4', same as above
     assert my_cts[2] == 'a1faa2'
-    assert my_cts[3] == 'a2f7e4'
+    assert my_cts[3] == 'a2bfe4'
 
     analyze([ct.decode('hex') for ct in my_cts])
 
@@ -144,7 +152,7 @@ def main():
     assert decrypt(my_cts[0].decode('hex'), key_as_string) == '\x94bc'  # the first caracter cannot get decoded
     assert decrypt(my_cts[1].decode('hex'), key_as_string) == '\x94 b'  # the first caracter cannot get decoded
     assert decrypt(my_cts[2].decode('hex'), key_as_string) == '\x91ef'  # the first caracter cannot get decoded
-    assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92h '  # the first caracter cannot get decoded
+    assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92  '  # the first caracter cannot get decoded
 
 
 
@@ -155,25 +163,22 @@ def main():
     # encrypt my plain text and then hex-encode them
     enc_key = '\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\9f\xc4\9f\xc4\9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f'
     my_cts2 = [encrypt(enc_key, pt).encode('hex') for pt in my_pts2]
-    import pdb; pdb.set_trace( )
-    assert my_cts2[0] == 'a4fda7'
+    assert my_cts2[0] == '95bfa794c792e5fe931e5408e40f7514e426480781dea9c7e49fd4a9b0fbe4e9acc790aefce49cd6a3f995ceaf'
+    assert my_cts2[8] == '86c99083f6e4a0d3a805703ce424560586105e46b5deb1f3b2b7e58db6fbabbf97ef9ea2deae80bfbcc6a1db87'
 
-
-
-    analyze(my_cts2)
+    analyze([ct.decode('hex') for ct in my_cts2])
+    key_as_string = "".join([str(k) for k in key])
     print key
-    print decrypt(my_cts2[0], key)
-    import pdb; pdb.set_trace( )
-
-
+    print decrypt(my_cts2[0].decode('hex'), key_as_string)   # P cQXV aWBmn SLr zqaEAlX ZKmud viXTkc YIgfPQk
 
     ### RUN ON HOMEWORK CYPHERTEXTS ###
     for i in range(len(key)):  # reset key
         key[i] = 0
 
     analyze([ct.decode('hex') for ct in cts])
+    key_as_string = "".join([str(k) for k in key])
     print key
-    print decrypt(tct.decode('hex'), key)
+    print decrypt(tct.decode('hex'), key_as_string)
 
                 #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
     #             print 'bingo! my_cts[0] has a space at index %s' % index
