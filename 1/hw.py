@@ -155,7 +155,6 @@ def main():
     assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92  '  # the first caracter cannot get decoded
 
 
-
     ### RUN ON KNOWN BUT LONGER CYPHERTEXTS ###
     for i in range(len(key)):  # reset key
         key[i] = 0
@@ -178,58 +177,9 @@ def main():
     analyze([ct.decode('hex') for ct in cts])
     key_as_string = "".join([str(k) for k in key])
     print key
+    import pdb; pdb.set_trace( )
     print decrypt(tct.decode('hex'), key_as_string)
 
-                #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #             print 'bingo! my_cts[0] has a space at index %s' % index
-    #             key[index] = strxor(my_cts[0][index], ' ')
-
-    # L ^ R
-    # for index, char in enumerate(strxor(my_cts[0], my_cts[1])):
-    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #         print 'found uppercase char (%s) at index %i' % (char, index)
-    #         print 'comparing index %i with next cypthertext' % index
-
-    #         if strxor(my_cts[0], my_cts[2])[index] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #             print 'bingo! my_cts[0] has a space at index %s' % index
-    #             key[index] = strxor(my_cts[0][index], ' ')
-    #         elif strxor(my_cts[1], my_cts[2])[index] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #             print 'bingo! my_cts[1] has a space at index %s' % index
-    #             key[index] = strxor(my_cts[1][index], ' ')
-
-    # # 1 ^ 3
-    # for index, char in enumerate(strxor(my_cts[0], my_cts[2])):
-    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #         print char
-
-    # # 2 ^ 3
-    # for index, char in enumerate(strxor(my_cts[1], my_cts[2])):
-    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-    #         print char
-
-
-    # import itertools
-    # for ct1, ct2 in itertools.permutations(cts, 2):
-    #     if ct1 == ct2:
-    #         continue
-    #     xored_cts = strxor(ct1, ct2)
-    #     find_spaces(ct1, xored_cts)  # both c2 have space at the same index, so just pass one
-
-
-
-
-
-
-
-
-
-    #     ct1 = split_to_bytes(ct1)
-    #     ct2 = split_to_bytes(ct2)
-    #     xored = strxor(ct1, ct2)
-    #     find_empty_bytes(ct1, xored)  # both c2 have space at the same index, so just pass one
-    # print key
-    # pt = strxor(tct, key)  # xor to decrypt
-    # print "".join([chr(int(byte, 16)) for byte in pt])
 
 if __name__ == '__main__':
     main()
