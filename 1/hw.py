@@ -107,8 +107,17 @@ def analyze_xored_cts(xored):
             print char
 
 
-def decrypt(ct, key):
-    return strxor(key, ct)
+def decrypt(ct, key_as_string):
+    decrypted = list(strxor(key_as_string, ct))
+
+    for index, k in enumerate(key):
+        if index >= len(decrypted):
+            continue  # we are not interested in key positions that are longer than our target cyphertext
+
+        if k == 0:
+            decrypted[index] = '_'
+    return "".join(decrypted)
+
 
 my_pts = [
     'abc',
@@ -149,10 +158,10 @@ def main():
     # as my_cts only have three bytes
     assert key[:3] == [0, '\x9f', '\xc4']
     key_as_string = "".join([str(k) for k in key[:3]])
-    assert decrypt(my_cts[0].decode('hex'), key_as_string) == '\x94bc'  # the first caracter cannot get decoded
-    assert decrypt(my_cts[1].decode('hex'), key_as_string) == '\x94 b'  # the first caracter cannot get decoded
-    assert decrypt(my_cts[2].decode('hex'), key_as_string) == '\x91ef'  # the first caracter cannot get decoded
-    assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92  '  # the first caracter cannot get decoded
+    assert decrypt(my_cts[0].decode('hex'), key_as_string) == '_bc'  # the first caracter cannot get decrypted so it's replaced by '_'
+    assert decrypt(my_cts[1].decode('hex'), key_as_string) == '_ b'
+    assert decrypt(my_cts[2].decode('hex'), key_as_string) == '_ef'
+    # the first caracter cannot get decoded
 
 
     ### RUN ON KNOWN BUT LONGER CYPHERTEXTS ###
@@ -168,7 +177,16 @@ def main():
     analyze([ct.decode('hex') for ct in my_cts2])
     key_as_string = "".join([str(k) for k in key])
     print key
-    print decrypt(my_cts2[0].decode('hex'), key_as_string)   # P cQXV aWBmn SLr zqaEAlX ZKmud viXTkc YIgfPQk
+
+    assert decrypt(my_cts2[0].decode('hex'), key_as_string) == 'P cQXV aW_mn SLr_z_aEAlX ZK_ud viXT__ YIgf_Q_'
+    assert decrypt(my_cts2[1].decode('hex'), key_as_string) == 'oB jxs ho_f cNMb_t_ GpSir y_volia f__kdcWR_ _'
+    assert decrypt(my_cts2[2].decode('hex'), key_as_string) == 'AVz CnaZ _P zWdh_ _K HKc tu_H RLiVD__E Aqg_m_'
+    assert decrypt(my_cts2[3].decode('hex'), key_as_string) == 'Pzxee AQE_BrLw L_l_liCdLKJ _ uZor f__KwRdQ_K_'
+    assert decrypt(my_cts2[4].decode('hex'), key_as_string) == 'LdydrNHL _HOt Yr_m_ xMYPgsJ_AXgl lQ__rfikh_ _'
+    assert decrypt(my_cts2[5].decode('hex'), key_as_string) == ' cvB WOsh_PIBluU_y_RH heUca_t PDggC__wJe d_b_'
+    assert decrypt(my_cts2[6].decode('hex'), key_as_string) == 'gVILxfQ r_zqxZ h_r_ uf DCB _JHBfO k__xAKmj_v_'
+    assert decrypt(my_cts2[7].decode('hex'), key_as_string) == 'nr OW Fga_ fsjW _A_ftTN tuZ_lbIGsi __joMh _B_'
+    assert decrypt(my_cts2[8].decode('hex'), key_as_string) == 'CVTFi eLl_IZ xoc_L_ qAtlvrz_sdo RpZ__jE xY_D_'
 
     ### RUN ON HOMEWORK CYPHERTEXTS ###
     for i in range(len(key)):  # reset key
@@ -177,7 +195,6 @@ def main():
     analyze([ct.decode('hex') for ct in cts])
     key_as_string = "".join([str(k) for k in key])
     print key
-    import pdb; pdb.set_trace( )
     print decrypt(tct.decode('hex'), key_as_string)
 
 
