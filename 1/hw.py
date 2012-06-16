@@ -12,6 +12,7 @@ cts = """
 """.split()
 
 
+
 def bytexor(a, b):     # xor two lists of hex values
     if len(a) > len(b):
         return [hex(int(x, 16) ^ int(y, 16)) for (x, y) in zip(a[:len(b)], b)]
@@ -40,29 +41,112 @@ def find_empty_bytes(ct, xored):
                 pass  # cypher text is longer than key, just skip
 
 
+def encrypt(key, msg):
+    c = strxor(key, msg)
+    return c
+
+
 def find_spaces(ct, xored_cts):
     for index, char in enumerate(xored_cts):
-        if char == '\x00':
-            print 'found space at position ' + str(index)
+        if char == '\x5a':
+            pass
             # try:
             #     key[index] = strxor(['0x20'], [ct[index]])[0]
             # except IndexError:
             #     pass  # cypher text is longer than key, just skip
 
 # encryption key
-key = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+#key = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+key = [0, 0, 0]
 
 # target cypher text
 tct = "32510ba9babebbbefd001547a810e67149caee11d945cd7fc81a05e9f85aac650e9052ba6a8cd8257bf14d13e6f0a803b54fde9e77472dbff89d71b57bddef121336cb85ccb8f3315f4b52e301d16e9f52f904"
 
 
+def encrypt_my_plaintexts():
+    key = '\xc5\x9f\xc4'
+    return [encrypt(key, ct) for ct in my_pts]
+
+
+def analyze_xored_cts(xored):
+    for index, char in enumerate(xored):
+        if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+            print char
+
+my_pts = [
+    'abc',
+    'a b',
+    'def',
+    'gh ',
+]
+
+
 def main():
+    my_cts = encrypt_my_plaintexts()
+    assert my_cts[0] == '\xa4\xfd\xa7'  # a is xored into '\xa4'
+    assert my_cts[1] == '\xa4\xbf\xa6'  # a is xored into '\xa4', same as above
+    assert my_cts[2] == '\xa1\xfa\xa2'
+    assert my_cts[3] == '\xa2\xf7\xe4'
+
     import itertools
-    for ct1, ct2 in itertools.permutations(cts, 2):
-        if ct1 == ct2:
-            continue
-        xored_cts = strxor(ct1, ct2)
-        find_spaces(ct1, xored_cts)  # both c2 have space at the same index, so just pass one
+    permutations = list(itertools.permutations(range(len(my_cts)), 2))
+
+    for pindex, perm in enumerate(permutations):
+
+        # compare two cypthertexts, choose IDs of cypthertexts from the list
+        # of permutations
+        xor = strxor(my_cts[perm[0]], my_cts[perm[1]])
+
+        # look for uppercase characters in the xor
+        for cindex, char in enumerate(xor):
+            if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                # print 'found uppercase char (%s) at index %i when comparing ct%i and ct%i' % (char, cindex, perm[0], perm[1])
+                # print 'comparing index %i with other cypthertexts' % cindex
+                # import pdb; pdb.set_trace( )
+                for i in range(len(my_cts)):
+                    if i in perm:  # skip ct IDs that we are already processing
+                        continue
+
+                    if strxor(my_cts[perm[0]], my_cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                        print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
+                        key[cindex] = strxor(my_cts[perm[0]][cindex], ' ')
+
+                #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #             print 'bingo! my_cts[0] has a space at index %s' % index
+    #             key[index] = strxor(my_cts[0][index], ' ')
+
+    # L ^ R
+    # for index, char in enumerate(strxor(my_cts[0], my_cts[1])):
+    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #         print 'found uppercase char (%s) at index %i' % (char, index)
+    #         print 'comparing index %i with next cypthertext' % index
+
+    #         if strxor(my_cts[0], my_cts[2])[index] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #             print 'bingo! my_cts[0] has a space at index %s' % index
+    #             key[index] = strxor(my_cts[0][index], ' ')
+    #         elif strxor(my_cts[1], my_cts[2])[index] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #             print 'bingo! my_cts[1] has a space at index %s' % index
+    #             key[index] = strxor(my_cts[1][index], ' ')
+
+    # # 1 ^ 3
+    # for index, char in enumerate(strxor(my_cts[0], my_cts[2])):
+    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #         print char
+
+    # # 2 ^ 3
+    # for index, char in enumerate(strxor(my_cts[1], my_cts[2])):
+    #     if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    #         print char
+
+    print key
+    assert key == [0, '\x9f', '\xc4']
+
+    # import itertools
+    # for ct1, ct2 in itertools.permutations(cts, 2):
+    #     if ct1 == ct2:
+    #         continue
+    #     xored_cts = strxor(ct1, ct2)
+    #     find_spaces(ct1, xored_cts)  # both c2 have space at the same index, so just pass one
 
 
 
