@@ -41,11 +41,6 @@ def find_empty_bytes(ct, xored):
                 pass  # cypher text is longer than key, just skip
 
 
-def encrypt(key, msg):
-    c = strxor(key, msg)
-    return c
-
-
 def find_spaces(ct, xored_cts):
     for index, char in enumerate(xored_cts):
         if char == '\x5a':
@@ -74,30 +69,38 @@ def analyze(cts):
 
         # look for uppercase characters in the xor
         for cindex, char in enumerate(xor):
+            if key[cindex] != 0:
+                continue  # we already have a key on this index
+
             if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                 # print 'found uppercase char (%s) at index %i when comparing ct%i and ct%i' % (char, cindex, perm[0], perm[1])
                 # print 'comparing index %i with other cypthertexts' % cindex
                 for i in range(len(cts)):
                     if i in perm:  # skip ct IDs that we are already processing
                         continue
-
-                    if strxor(cts[perm[0]], cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-                        #print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
-                        try:
+                    try:
+                        if strxor(cts[perm[0]], cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                            #print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
+                            # if cindex == 2:
+                            #     import pdb; pdb.set_trace( )
                             key[cindex] = strxor(cts[perm[0]][cindex], ' ')
-                        except IndexError:
-                            pass  # we've found a space in a cypher text longer than our target text so we don't need it
+                    except IndexError:
+                        pass  # we've found a space in a cypher text longer than our target text so we don't need it
 
 
-def encrypt_my_plaintexts():
-    key = '\xc5\x9f\xc4'
-    return [encrypt(key, ct) for ct in my_pts]
+def encrypt(key, msg):
+    c = strxor(key, msg)
+    return c
 
 
 def analyze_xored_cts(xored):
     for index, char in enumerate(xored):
         if char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
             print char
+
+
+def decrypt(ct, key):
+    return strxor(key, ct)
 
 my_pts = [
     'abc',
@@ -106,28 +109,64 @@ my_pts = [
     'gh ',
 ]
 
+# "".join([random.choice(string.ascii_letters) for i in range(40)])
+my_pts2 = [
+    'P cQXV aWBmn SLr zqaEAlX ZKmud viXTkc YIgfPQk',
+    'oB jxs hoMf cNMb tU GpSir yXvolia foFkdcWRA d',
+    'AVz CnaZ DP zWdhC PK HKc tuOH RLiVDZUE AqgimO',
+    'Pzxee AQEZBrLw LRlWliCdLKJ U uZor feUKwRdQPKr',
+    'LdydrNHL NHOt Yrimt xMYPgsJxAXgl lQNVrfikhh g',
+    ' cvB WOshWPIBluUDyARH heUcaNt PDggCPJwJe dtbd',
+    'gVILxfQ rbzqxZ hWrE uf DCB GJHBfO kAVxAKmjGvb',
+    'nr OW FgaF fsjW TABftTN tuZGlbIGsi dIjoMh GBw',
+    'CVTFi eLlYIZ xocBLg qAtlvrzIsdo RpZgAjE xYdDC',
+]
+
 
 def main():
-    my_cts = encrypt_my_plaintexts()
-    assert my_cts[0] == '\xa4\xfd\xa7'  # a is xored into '\xa4'
-    assert my_cts[1] == '\xa4\xbf\xa6'  # a is xored into '\xa4', same as above
-    assert my_cts[2] == '\xa1\xfa\xa2'
-    assert my_cts[3] == '\xa2\xf7\xe4'
 
-    analyze(my_cts)
+    ### RUN ON KNOWN CYPHERTEXTS ###
+    enc_key = '\xc5\x9f\xc4'
+
+    # encrypt my plain text and then hex-encode them
+    my_cts = [encrypt(enc_key, pt).encode('hex') for pt in my_pts]
+    assert my_cts[0] == 'a4fda7'  # a is xored into 'a4'
+    assert my_cts[1] == 'a4bfa6'  # a is xored into 'a4', same as above
+    assert my_cts[2] == 'a1faa2'
+    assert my_cts[3] == 'a2f7e4'
+
+    analyze([ct.decode('hex') for ct in my_cts])
 
     # key placeholder is longer, we are only iterested in the first three bytes
     # as my_cts only have three bytes
-    print key[:3]
     assert key[:3] == [0, '\x9f', '\xc4']
+    key_as_string = "".join([str(k) for k in key[:3]])
+    assert decrypt(my_cts[0].decode('hex'), key_as_string) == '\x94bc'  # the first caracter cannot get decoded
+    assert decrypt(my_cts[1].decode('hex'), key_as_string) == '\x94 b'  # the first caracter cannot get decoded
+    assert decrypt(my_cts[2].decode('hex'), key_as_string) == '\x91ef'  # the first caracter cannot get decoded
+    assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92h '  # the first caracter cannot get decoded
+
+    ### RUN ON KNOWN BUT LONGER CYPHERTEXTS ###
+    for i in range(len(key)):  # reset key
+        key[i] = 0
+
+    enc_key = '\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\9f\xc4\9f\xc4\9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f'
+    my_cts2 = [encrypt(enc_key, pt) for pt in my_pts2]
+
+    analyze(my_cts2)
+    print key
+    print decrypt(my_cts2[0], key)
+    import pdb; pdb.set_trace( )
+
 
 
     ### RUN ON HOMEWORK CYPHERTEXTS ###
-    key[1] = 0  # reset key placeholder
-    key[2] = 0  # reset key placeholder
-    analyze(cts)
-    print key
+    for i in range(len(key)):  # reset key
+        key[i] = 0
 
+    analyze([ct.decode('hex') for ct in cts])
+    print key
+    print decrypt(tct.decode('hex'), key)
 
                 #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
     #             print 'bingo! my_cts[0] has a space at index %s' % index
