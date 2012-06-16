@@ -126,9 +126,9 @@ my_pts2 = [
 def main():
 
     ### RUN ON KNOWN CYPHERTEXTS ###
-    enc_key = '\xc5\x9f\xc4'
 
     # encrypt my plain text and then hex-encode them
+    enc_key = '\xc5\x9f\xc4'
     my_cts = [encrypt(enc_key, pt).encode('hex') for pt in my_pts]
     assert my_cts[0] == 'a4fda7'  # a is xored into 'a4'
     assert my_cts[1] == 'a4bfa6'  # a is xored into 'a4', same as above
@@ -146,12 +146,19 @@ def main():
     assert decrypt(my_cts[2].decode('hex'), key_as_string) == '\x91ef'  # the first caracter cannot get decoded
     assert decrypt(my_cts[3].decode('hex'), key_as_string) == '\x92h '  # the first caracter cannot get decoded
 
+
+
     ### RUN ON KNOWN BUT LONGER CYPHERTEXTS ###
     for i in range(len(key)):  # reset key
         key[i] = 0
 
+    # encrypt my plain text and then hex-encode them
     enc_key = '\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\9f\xc4\9f\xc4\9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f\xc5\x9f\xc4\xc5\x9f\xc4\xc5\x9f\xc4\x9f'
-    my_cts2 = [encrypt(enc_key, pt) for pt in my_pts2]
+    my_cts2 = [encrypt(enc_key, pt).encode('hex') for pt in my_pts2]
+    import pdb; pdb.set_trace( )
+    assert my_cts2[0] == 'a4fda7'
+
+
 
     analyze(my_cts2)
     print key
