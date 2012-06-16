@@ -40,6 +40,15 @@ def find_empty_bytes(ct, xored):
                 pass  # cypher text is longer than key, just skip
 
 
+def find_spaces(ct, xored_cts):
+    for index, char in enumerate(xored_cts):
+        if char == '\x00':
+            print 'found space at position ' + str(index)
+            # try:
+            #     key[index] = strxor(['0x20'], [ct[index]])[0]
+            # except IndexError:
+            #     pass  # cypher text is longer than key, just skip
+
 # encryption key
 key = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
@@ -52,8 +61,9 @@ def main():
     for ct1, ct2 in itertools.permutations(cts, 2):
         if ct1 == ct2:
             continue
-        xored = strxor(ct1, ct2)
-    import pdb; pdb.set_trace( )
+        xored_cts = strxor(ct1, ct2)
+        find_spaces(ct1, xored_cts)  # both c2 have space at the same index, so just pass one
+
 
 
 
