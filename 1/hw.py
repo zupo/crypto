@@ -58,10 +58,8 @@ def find_spaces(ct, xored_cts):
 # target cypher text
 tct = "32510ba9babebbbefd001547a810e67149caee11d945cd7fc81a05e9f85aac650e9052ba6a8cd8257bf14d13e6f0a803b54fde9e77472dbff89d71b57bddef121336cb85ccb8f3315f4b52e301d16e9f52f904"
 
-# placeholder for encryption key
-# each char takes one byte, or 2 hex numbers
-# so we need our key to be as long as 2-number pairs in tct
-key = [0 for i in range(len(tct) / 2)]
+# placeholder for encryption key, it needs to be as long as the tct
+key = [0 for i in range(len(tct))]
 
 
 def analyze(cts):
@@ -85,7 +83,10 @@ def analyze(cts):
 
                     if strxor(cts[perm[0]], cts[i])[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                         #print 'bingo! my_cts[%i] has a space at index %i' % (perm[0], cindex)
-                        key[cindex] = strxor(cts[perm[0]][cindex], ' ')
+                        try:
+                            key[cindex] = strxor(cts[perm[0]][cindex], ' ')
+                        except IndexError:
+                            pass  # we've found a space in a cypher text longer than our target text so we don't need it
 
 
 def encrypt_my_plaintexts():
@@ -120,6 +121,12 @@ def main():
     print key[:3]
     assert key[:3] == [0, '\x9f', '\xc4']
 
+
+    ### RUN ON HOMEWORK CYPHERTEXTS ###
+    key[1] = 0  # reset key placeholder
+    key[2] = 0  # reset key placeholder
+    analyze(cts)
+    print key
 
 
                 #if strxor(my_cts[permutations[pindex+1][i]], )[cindex] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
