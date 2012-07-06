@@ -141,7 +141,7 @@ my_pts2 = [
 
 
 def main():
-
+    import pdb; pdb.set_trace( )
     ### RUN ON KNOWN CYPHERTEXTS ###
 
     # encrypt my plain text and then hex-encode them
