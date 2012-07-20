@@ -12,8 +12,8 @@ def strxor(a, b):     # xor two strings of different lengths
 def main():
     print 'cpyther text: %s' % ct
     print 'IV          : %s' % iv
-    xored_part = strxor(strxor(iv[9], '1'), '5')
-    new_iv = iv[:9] + xored_part + iv[10:]
+    xored_part = strxor(strxor(iv[8], '1'), '5')
+    new_iv = iv[:8] + xored_part + iv[9:]
     print 'new IV      : %s' % new_iv
     new_ct = new_iv + ct[16:]
     print 'new ct:     : %s' % new_ct.encode('hex')
